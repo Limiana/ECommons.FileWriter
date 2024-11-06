@@ -11,7 +11,7 @@ internal class Program
         if(args.Length > 0)
         {
             using PipeStream pipeClient = new AnonymousPipeClientStream(PipeDirection.In, args[0]);
-            Console.WriteLine("[CLIENT] Current TransmissionMode: {0}.", pipeClient.TransmissionMode);
+            Console.WriteLine($"[FileWriterClient] Current TransmissionMode: {pipeClient.TransmissionMode}. Handle: {args[0]}");
 
             using StreamReader sr = new StreamReader(pipeClient);
             string? result;
@@ -19,7 +19,7 @@ internal class Program
             {
                 try
                 {
-                    Console.WriteLine($"Received data: {result}");
+                    Console.WriteLine($"[FileWriterClient] Received data, length={result.Length}");
                     var data = JsonSerializer.Deserialize<FileSaveStruct>(result) ?? throw new NullReferenceException();
                     if(data.Data == null) throw new NullReferenceException();
                     if(data.DataHash == null) throw new NullReferenceException();
@@ -27,16 +27,16 @@ internal class Program
                     if(data.NameHash == null) throw new NullReferenceException();
                     if(!SHA1.HashData(data.Data).SequenceEqual(data.DataHash)) throw new InvalidDataException("Received data hash is not valid");
                     if(!SHA1.HashData(Encoding.UTF8.GetBytes(data.Name)).SequenceEqual(data.NameHash)) throw new InvalidDataException("Received name hash is not valid");
-                    Console.WriteLine($"Checks passed, writing to {data.Name}");
+                    Console.WriteLine($"[FileWriterClient] Checks passed, writing to {data.Name}");
                     File.WriteAllBytes(data.Name, data.Data);
-                    Console.WriteLine($"SUCCESS: data saved");
+                    Console.WriteLine($"[FileWriterClient] SUCCESS: data saved");
                 }
                 catch(Exception ex)
                 {
-                    Console.WriteLine($"ERROR: {ex.Message}");
+                    Console.WriteLine($"[FileWriterClient] ERROR: {ex.Message}");
                 }
             }
-            Console.WriteLine($"ECommons.FileWriter is terminating.");
+            Console.WriteLine($"[FileWriterClient] ECommons.FileWriter is terminating.");
         }
     }
 }
